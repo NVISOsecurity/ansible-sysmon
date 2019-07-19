@@ -1,0 +1,34 @@
+---
+- name: Create directory
+  win_file:
+    path: "{{ sysmon_install_location }}"
+    state: directory
+  register: result
+
+- name: Get sysmon zip
+  win_get_url:
+    url: "{{ sysmon_download_url_base }}/{{ sysmon_download_file }}{{ file_ext }}"
+    dest: "{{ sysmon_install_location }}/{{ sysmon_download_file }}{{ file_ext }}"
+
+- name: Unzip sysmon
+  win_unzip:
+    src: "{{ sysmon_install_location }}/{{ sysmon_download_file }}{{ file_ext }}"
+    dest: "{{ sysmon_install_location }}"
+
+- name: Copy sysmon config
+  win_copy:
+    src: files/sysmonconfig-export.xml
+    dest: c:\sysmon\sysmonconfig-export.xml
+
+- name: check sysmon service
+  win_service:
+    name: sysmon
+  register: result
+  failed_when: result is not defined
+  ignore_errors: yes
+
+- name: Run sysmon
+  win_command: "{{ sysmon_install_location }}\\sysmon.exe -accepteula -i {{ sysmon_install_location }}\\sysmonconfig-export.xml"
+  args:
+    chdir: "{{ sysmon_install_location }}"
+  when: result.state is not defined or result.name is not defined
