@@ -16,19 +16,19 @@
     dest: "{{ sysmon_install_location }}"
 
 - name: Copy sysmon config
-  win_copy:
-    src: files/sysmonconfig-export.xml
+  win_get_url:
+    url: "{{ sysmon_config_url }}"
     dest: c:\sysmon\sysmonconfig-export.xml
 
 - name: check sysmon service
   win_service:
-    name: sysmon
+    name: sysmon64
   register: result
   failed_when: result is not defined
   ignore_errors: yes
 
 - name: Run sysmon
-  win_command: "{{ sysmon_install_location }}\\sysmon.exe -accepteula -i {{ sysmon_install_location }}\\sysmonconfig-export.xml"
+  win_command: "{{ sysmon_install_location }}\\sysmon64.exe -accepteula -i {{ sysmon_install_location }}\\sysmonconfig-export.xml"
   args:
     chdir: "{{ sysmon_install_location }}"
   when: result.state is not defined or result.name is not defined
